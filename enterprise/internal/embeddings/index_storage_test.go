@@ -3,6 +3,7 @@ package embeddings
 import (
 	"bytes"
 	"context"
+	"encoding/gob"
 	"fmt"
 	"io"
 	"math/rand"
@@ -126,6 +127,38 @@ func TestRepoEmbeddingIndexStorage(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, index, downloadedIndex)
+}
+
+func TestRepoEmbeddingFormatVersion(t *testing.T) {
+	index := &RepoEmbeddingIndex{
+		RepoName: api.RepoName("repo"),
+		Revision: api.CommitID("commit"),
+		CodeIndex: EmbeddingIndex{
+			Embeddings:      []int8{0, 1, 2},
+			ColumnDimension: 3,
+			RowMetadata:     []RepoEmbeddingRowMetadata{{FileName: "a.go", StartLine: 0, EndLine: 1}},
+		},
+		TextIndex: EmbeddingIndex{
+			Embeddings:      []int8{10, 21, 32},
+			ColumnDimension: 3,
+			RowMetadata:     []RepoEmbeddingRowMetadata{{FileName: "b.py", StartLine: 0, EndLine: 1}},
+		},
+	}
+
+	ctx := context.Background()
+	uploadStore := newMockUploadStore()
+	var buf bytes.Buffer
+
+	// Use a non-existent format version, and check we catch the error.
+	var formatVersion IndexFormatVersion = 1
+	err := encodeRepoEmbeddingIndex(gob.NewEncoder(&buf), index, embeddingsChunkSize, formatVersion)
+	require.NoError(t, err)
+
+	_, err = uploadStore.Upload(ctx, "index", &buf)
+	require.NoError(t, err)
+
+	_, err = DownloadRepoEmbeddingIndex(ctx, uploadStore, "index")
+	require.EqualError(t, err, "unrecognized index format version: 1")
 }
 
 func TestRepoEmbeddingVersionMismatch(t *testing.T) {

@@ -13,6 +13,15 @@ import (
 	"github.com/sourcegraph/sourcegraph/lib/errors"
 )
 
+// IndexFormatVersion is a version number that's increased every time the on-disk index format is
+// changed. Make sure to update CurrentFormatVersion whenever you add a new version.
+type IndexFormatVersion int
+
+const CurrentFormatVersion = InitialVersion
+const (
+	InitialVersion IndexFormatVersion = iota
+)
+
 func DownloadIndex[T any](ctx context.Context, uploadStore uploadstore.Store, key string) (_ *T, err error) {
 	file, err := uploadStore.Get(ctx, key)
 	if err != nil {
@@ -46,7 +55,7 @@ func UploadRepoEmbeddingIndex(ctx context.Context, uploadStore uploadstore.Store
 		defer pw.Close()
 
 		enc := gob.NewEncoder(pw)
-		return encodeRepoEmbeddingIndex(enc, index, embeddingsChunkSize)
+		return encodeRepoEmbeddingIndex(enc, index, embeddingsChunkSize, CurrentFormatVersion)
 	})
 
 	eg.Go(func() error {
@@ -100,6 +109,16 @@ func DownloadRepoEmbeddingIndex(ctx context.Context, uploadStore uploadstore.Sto
 	defer file.Close()
 
 	dec := gob.NewDecoder(file)
+	var formatVersion IndexFormatVersion
+	if err := dec.Decode(&formatVersion); err != nil {
+		// If there's an error, assume this is an old index that doesn't encode the version
+		formatVersion = InitialVersion
+		dec = gob.NewDecoder(file)
+	}
+
+	if formatVersion > CurrentFormatVersion {
+		return nil, errors.Newf("unrecognized index format version: %d", formatVersion)
+	}
 
 	rei, err := decodeRepoEmbeddingIndex(dec)
 	// If decoding fails, assume it is an old index and decode with a generic decoder.
@@ -119,7 +138,12 @@ const embeddingsChunkSize = 10_000
 // encodeRepoEmbeddingIndex is a specialized encoder for repo embedding indexes. Instead of GOB-encoding
 // the entire RepoEmbeddingIndex, we encode each field separately, and we encode the embeddings array by chunks.
 // This way we avoid allocating a separate very large slice for the embeddings.
-func encodeRepoEmbeddingIndex(enc *gob.Encoder, rei *RepoEmbeddingIndex, chunkSize int) error {
+func encodeRepoEmbeddingIndex(enc *gob.Encoder, rei *RepoEmbeddingIndex, chunkSize int, formatVersion IndexFormatVersion) error {
+	// Always encode index format version first, as part of 'file header'
+	if err := enc.Encode(formatVersion); err != nil {
+		return err
+	}
+
 	if err := enc.Encode(rei.RepoName); err != nil {
 		return err
 	}
@@ -165,7 +189,6 @@ func encodeRepoEmbeddingIndex(enc *gob.Encoder, rei *RepoEmbeddingIndex, chunkSi
 
 func decodeRepoEmbeddingIndex(dec *gob.Decoder) (*RepoEmbeddingIndex, error) {
 	rei := &RepoEmbeddingIndex{}
-
 	if err := dec.Decode(&rei.RepoName); err != nil {
 		return nil, err
 	}
