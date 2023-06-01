@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codygateway"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/completions/types"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/licensing"
 	"github.com/sourcegraph/sourcegraph/internal/gqlutil"
@@ -53,10 +54,11 @@ func (r codyGatewayAccessResolver) ChatCompletionsRateLimit(ctx context.Context)
 	}
 
 	return &codyGatewayRateLimitResolver{
-		feature: types.CompletionsFeatureChat,
-		subUUID: r.sub.UUID(),
-		v:       rateLimit,
-		source:  source,
+		feature:     types.CompletionsFeatureChat,
+		actorID:     r.sub.UUID(),
+		actorSource: codygateway.ActorSourceProductSubscription,
+		v:           rateLimit,
+		source:      source,
 	}, nil
 }
 
@@ -96,18 +98,20 @@ func (r codyGatewayAccessResolver) CodeCompletionsRateLimit(ctx context.Context)
 	}
 
 	return &codyGatewayRateLimitResolver{
-		feature: types.CompletionsFeatureCode,
-		subUUID: r.sub.UUID(),
-		v:       rateLimit,
-		source:  source,
+		feature:     types.CompletionsFeatureCode,
+		actorID:     r.sub.UUID(),
+		actorSource: codygateway.ActorSourceProductSubscription,
+		v:           rateLimit,
+		source:      source,
 	}, nil
 }
 
 type codyGatewayRateLimitResolver struct {
-	subUUID string
-	feature types.CompletionsFeature
-	source  graphqlbackend.CodyGatewayRateLimitSource
-	v       licensing.CodyGatewayRateLimit
+	actorID     string
+	actorSource codygateway.ActorSource
+	feature     types.CompletionsFeature
+	source      graphqlbackend.CodyGatewayRateLimitSource
+	v           licensing.CodyGatewayRateLimit
 }
 
 func (r *codyGatewayRateLimitResolver) Source() graphqlbackend.CodyGatewayRateLimitSource {
@@ -121,7 +125,7 @@ func (r *codyGatewayRateLimitResolver) Limit() int32 { return r.v.Limit }
 func (r *codyGatewayRateLimitResolver) IntervalSeconds() int32 { return r.v.IntervalSeconds }
 
 func (r codyGatewayRateLimitResolver) Usage(ctx context.Context) ([]graphqlbackend.CodyGatewayUsageDatapoint, error) {
-	usage, err := NewCodyGatewayService().UsageForSubscription(ctx, r.feature, r.subUUID)
+	usage, err := NewCodyGatewayService().UsageForActor(ctx, r.feature, r.actorID, r.actorSource)
 	if err != nil {
 		return nil, err
 	}
