@@ -18,6 +18,7 @@ import (
 // dotcomRootResolver implements the GraphQL types DotcomMutation and DotcomQuery.
 type dotcomRootResolver struct {
 	productsubscription.ProductSubscriptionLicensingResolver
+	productsubscription.CodyGatewayDotcomUserResolver
 }
 
 func (d dotcomRootResolver) Dotcom() graphqlbackend.DotcomResolver {
@@ -49,6 +50,9 @@ func Init(
 	if envvar.SourcegraphDotComMode() {
 		enterpriseServices.DotcomRootResolver = dotcomRootResolver{
 			ProductSubscriptionLicensingResolver: productsubscription.ProductSubscriptionLicensingResolver{
+				DB: db,
+			},
+			CodyGatewayDotcomUserResolver: productsubscription.CodyGatewayDotcomUserResolver{
 				DB: db,
 			},
 		}
