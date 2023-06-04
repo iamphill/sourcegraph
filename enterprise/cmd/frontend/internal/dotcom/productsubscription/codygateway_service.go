@@ -72,7 +72,7 @@ type codyGatewayService struct {
 	opts CodyGatewayServiceOptions
 }
 
-func (s *codyGatewayService) UsageForActor(ctx context.Context, feature types.CompletionsFeature, actorID string, actorSource codygateway.ActorSource) ([]SubscriptionUsage, error) {
+func (s *codyGatewayService) UsageForActor(ctx context.Context, feature types.CompletionsFeature, actorSource codygateway.ActorSource, actorID string) ([]SubscriptionUsage, error) {
 	if !s.opts.BigQuery.IsConfigured() {
 		// Not configured, nothing we can do.
 		return nil, nil

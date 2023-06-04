@@ -125,7 +125,7 @@ func (r *codyGatewayRateLimitResolver) Limit() int32 { return r.v.Limit }
 func (r *codyGatewayRateLimitResolver) IntervalSeconds() int32 { return r.v.IntervalSeconds }
 
 func (r codyGatewayRateLimitResolver) Usage(ctx context.Context) ([]graphqlbackend.CodyGatewayUsageDatapoint, error) {
-	usage, err := NewCodyGatewayService().UsageForActor(ctx, r.feature, r.actorID, r.actorSource)
+	usage, err := NewCodyGatewayService().UsageForActor(ctx, r.feature, r.actorSource, r.actorID)
 	if err != nil {
 		return nil, err
 	}
