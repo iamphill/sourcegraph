@@ -31,6 +31,11 @@ func (e ErrNotFromSource) Error() string {
 	return fmt.Sprintf("token not from source: %s", e.Reason)
 }
 
+func (e ErrNotFromSource) Is(err error) bool {
+	_, ok := err.(ErrNotFromSource)
+	return ok
+}
+
 // Source is the interface for actor sources.
 type Source interface {
 	Name() string
