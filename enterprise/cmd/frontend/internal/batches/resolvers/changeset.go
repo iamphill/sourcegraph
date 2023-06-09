@@ -357,10 +357,12 @@ func (r *changesetResolver) CommitVerification(ctx context.Context) (graphqlback
 		if r.specErr != nil {
 			return nil, r.specErr
 		}
-		return &commitVerificationResolver{
-			// TODO: Fix this type
-			commitVerification: r.spec.commitVerification,
-		}, nil
+		if r.spec.CommitVerification != nil {
+			return &commitVerificationResolver{
+				// TODO: Fix this type
+				commitVerification: r.spec.CommitVerification,
+			}, nil
+		}
 	}
 	return nil, nil
 }
