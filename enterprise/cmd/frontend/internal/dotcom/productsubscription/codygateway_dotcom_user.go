@@ -144,7 +144,7 @@ func (r codyUserGatewayAccessResolver) EmbeddingsRateLimit(ctx context.Context) 
 
 	rateLimit := licensing.CodyGatewayRateLimit{
 		AllowedModels:   []string{"openai/text-embedding-ada-002"},
-		Limit:           int32(20 * tokensPerDollar),
+		Limit:           int64(20 * tokensPerDollar),
 		IntervalSeconds: math.MaxInt32,
 	}
 
@@ -194,7 +194,7 @@ func getCompletionsRateLimit(ctx context.Context, db database.DB, userID int32, 
 	}
 	return licensing.CodyGatewayRateLimit{
 		AllowedModels:   allowedModels(scope),
-		Limit:           int32(*limit),
+		Limit:           int64(*limit),
 		IntervalSeconds: 86400, // Daily limit TODO(davejrt)
 	}, source, nil
 }

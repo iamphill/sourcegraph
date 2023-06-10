@@ -21421,7 +21421,7 @@
         {
           "Name": "cody_gateway_chat_rate_limit",
           "Index": 9,
-          "TypeName": "integer",
+          "TypeName": "bigint",
           "IsNullable": true,
           "Default": "",
           "CharacterMaximumLength": 0,
@@ -21460,7 +21460,7 @@
         {
           "Name": "cody_gateway_code_rate_limit",
           "Index": 15,
-          "TypeName": "integer",
+          "TypeName": "bigint",
           "IsNullable": true,
           "Default": "",
           "CharacterMaximumLength": 0,
@@ -21512,7 +21512,7 @@
         {
           "Name": "cody_gateway_embeddings_api_rate_limit",
           "Index": 11,
-          "TypeName": "integer",
+          "TypeName": "bigint",
           "IsNullable": true,
           "Default": "",
           "CharacterMaximumLength": 0,

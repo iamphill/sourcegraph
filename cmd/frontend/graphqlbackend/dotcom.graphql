@@ -427,9 +427,8 @@ type CodyGatewayRateLimit {
     allowedModels: [String!]!
     """
     Requests per time interval.
-    TODO: This needs to become BigInt, the limits for embeddings can exceed int32.
     """
-    limit: Int!
+    limit: BigInt!
     """
     Interval for rate limiting.
     """
