@@ -73,7 +73,11 @@ export const ExternalChangesetInfoCell: React.FunctionComponent<
                     <ChangesetLastSynced changeset={node} viewerCanAdminister={viewerCanAdminister} />
                 )}
                 {/* TODO: Add tooltip */}
-                {!!node?.commitVerification?.verified && <Badge pill={true}>Verified</Badge>}
+                {!!node?.commitVerification?.verified && (
+                    <Badge pill={true} className="mx-2">
+                        Verified
+                    </Badge>
+                )}
             </div>
         </div>
     )
