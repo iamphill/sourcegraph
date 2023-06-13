@@ -121,21 +121,21 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
         // moment)
         const lastChange = this.lastContentChanges.get(document.fileName) ?? 'add'
         if (lastChange === 'del') {
-            // When a line was deleted, only look up cached items and only include them if the
-            // untruncated prefix matches. This fixes some weird issues where the completion would
-            // render if you insert whitespace but not on the original place when you delete it
-            // again
-            const cachedCompletions = inlineCompletionsCache.get(prefix, false)
-            if (cachedCompletions?.isExactPrefix) {
-                return toInlineCompletionItems(cachedCompletions.logId, cachedCompletions.completions)
-            }
-            return []
+            // // When a line was deleted, only look up cached items and only include them if the
+            // // untruncated prefix matches. This fixes some weird issues where the completion would
+            // // render if you insert whitespace but not on the original place when you delete it
+            // // again
+            // const cachedCompletions = inlineCompletionsCache.get(prefix, false)
+            // if (cachedCompletions?.isExactPrefix) {
+            //     return toInlineCompletionItems(cachedCompletions.logId, cachedCompletions.completions)
+            // }
+            // return []
         }
 
-        const cachedCompletions = inlineCompletionsCache.get(prefix)
-        if (cachedCompletions) {
-            return toInlineCompletionItems(cachedCompletions.logId, cachedCompletions.completions)
-        }
+        // const cachedCompletions = inlineCompletionsCache.get(prefix)
+        // if (cachedCompletions) {
+        //     return toInlineCompletionItems(cachedCompletions.logId, cachedCompletions.completions)
+        // }
 
         const remainingChars = this.tokToChar(this.promptTokens)
 
@@ -163,7 +163,6 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
 
         const completers: CompletionProvider[] = []
         let timeout: number
-        let multilineMode: null | 'block' = null
         // VS Code does not show completions if we are in the process of writing a word or if a
         // selected completion info is present (so something is selected from the completions
         // dropdown list based on the lang server) and the returned completion range does not
@@ -186,15 +185,15 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
             return []
         }
 
-        if (
-            (multilineMode = detectMultilineMode(
-                prefix,
-                prevNonEmptyLine,
-                sameLinePrefix,
-                sameLineSuffix,
-                document.languageId
-            ))
-        ) {
+        const multilineMode = detectMultilineMode(
+            prefix,
+            prevNonEmptyLine,
+            sameLinePrefix,
+            sameLineSuffix,
+            document.languageId
+        )
+        console.log('# multilineMode', multilineMode)
+        if (multilineMode) {
             timeout = 200
             completers.push(
                 new InlineCompletionProvider(
@@ -269,9 +268,11 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
 
         const logId = CompletionLogger.start({ type: 'inline', multilineMode })
 
-        const results = rankCompletions(
-            (await Promise.all(completers.map(c => c.generateCompletions(abortController.signal)))).flat()
-        )
+        const unrankedResults = (
+            await Promise.all(completers.map(c => c.generateCompletions(abortController.signal)))
+        ).flat()
+        console.log('# unrankedResults', unrankedResults)
+        const results = rankCompletions(unrankedResults)
 
         const visibleResults = filterCompletions(results)
 
