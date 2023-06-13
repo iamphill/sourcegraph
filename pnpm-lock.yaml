@@ -1,9 +1,5 @@
 lockfileVersion: '6.1'
 
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
-
 overrides:
   '@types/webpack': '5'
   history: 4.5.1
