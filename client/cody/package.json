@@ -284,7 +284,8 @@
       },
       {
         "command": "cody.delete-access-token",
-        "title": "Cody: Sign out"
+        "category": "Cody",
+        "title": "Sign Out"
       },
       {
         "command": "cody.clear-chat-history",
@@ -296,19 +297,16 @@
       },
       {
         "command": "cody.settings",
-        "title": "Settings",
         "category": "Cody",
+        "title": "Settings",
         "group": "Cody",
         "icon": "$(gear)"
       },
       {
         "command": "cody.switch-account",
+        "category": "Cody",
         "title": "Switch Account",
-        "icon": "$(account)"
-      },
-      {
-        "command": "cody.menu.switch-account",
-        "title": "Switch Account",
+        "group": "Cody",
         "icon": "$(account)"
       },
       {
@@ -350,10 +348,6 @@
       {
         "command": "cody.walkthrough.enableCodeCompletions",
         "title": "Cody Walkthrough: Enable Code Completions"
-      },
-      {
-        "command": "cody.menu.switch-account",
-        "title": "Switch Account"
       },
       {
         "command": "cody.comment.add",
@@ -646,11 +640,6 @@
           "command": "cody.feedback",
           "when": "view == cody.chat",
           "group": "navigation@3"
-        },
-        {
-          "command": "cody.settings",
-          "when": "view == cody.chat && cody.activated",
-          "group": "navigation@4"
         },
         {
           "command": "cody.welcome",
