@@ -965,10 +965,11 @@ Triggers:
  document_path      | text    |           | not null | 
  graph_key          | text    |           | not null | 
  exported_upload_id | integer |           | not null | 
+ symbol_checksum    | bytea   |           | not null | '\x'::bytea
 Indexes:
     "codeintel_ranking_definitions_pkey" PRIMARY KEY, btree (id)
     "codeintel_ranking_definitions_exported_upload_id" btree (exported_upload_id)
-    "codeintel_ranking_definitions_graph_key_symbol_search" btree (graph_key, symbol_name, exported_upload_id, document_path)
+    "codeintel_ranking_definitions_graph_key_symbol_checksum_search" btree (graph_key, symbol_checksum, exported_upload_id, document_path)
 Foreign-key constraints:
     "codeintel_ranking_definitions_exported_upload_id_fkey" FOREIGN KEY (exported_upload_id) REFERENCES codeintel_ranking_exports(id) ON DELETE CASCADE
 
@@ -1063,6 +1064,7 @@ Indexes:
  symbol_names       | text[]  |           | not null | 
  graph_key          | text    |           | not null | 
  exported_upload_id | integer |           | not null | 
+ symbol_checksums   | bytea[] |           | not null | '{}'::bytea[]
 Indexes:
     "codeintel_ranking_references_pkey" PRIMARY KEY, btree (id)
     "codeintel_ranking_references_exported_upload_id" btree (exported_upload_id)
@@ -1735,15 +1737,23 @@ Referenced by:
 
 # Table "public.github_app_installs"
 ```
-     Column      |           Type           | Collation | Nullable |                     Default                     
------------------+--------------------------+-----------+----------+-------------------------------------------------
- id              | integer                  |           | not null | nextval('github_app_installs_id_seq'::regclass)
- app_id          | integer                  |           | not null | 
- installation_id | integer                  |           | not null | 
- created_at      | timestamp with time zone |           | not null | now()
+       Column       |           Type           | Collation | Nullable |                     Default                     
+--------------------+--------------------------+-----------+----------+-------------------------------------------------
+ id                 | integer                  |           | not null | nextval('github_app_installs_id_seq'::regclass)
+ app_id             | integer                  |           | not null | 
+ installation_id    | integer                  |           | not null | 
+ created_at         | timestamp with time zone |           | not null | now()
+ url                | text                     |           |          | 
+ account_login      | text                     |           |          | 
+ account_avatar_url | text                     |           |          | 
+ account_url        | text                     |           |          | 
+ account_type       | text                     |           |          | 
+ updated_at         | timestamp with time zone |           | not null | now()
 Indexes:
     "github_app_installs_pkey" PRIMARY KEY, btree (id)
+    "unique_app_install" UNIQUE CONSTRAINT, btree (app_id, installation_id)
     "app_id_idx" btree (app_id)
+    "github_app_installs_account_login" btree (account_login)
     "installation_id_idx" btree (installation_id)
 Foreign-key constraints:
     "github_app_installs_app_id_fkey" FOREIGN KEY (app_id) REFERENCES github_apps(id) ON DELETE CASCADE
@@ -3248,6 +3258,7 @@ Indexes:
  revoked_at              | timestamp with time zone |           |          | 
  salesforce_sub_id       | text                     |           |          | 
  salesforce_opp_id       | text                     |           |          | 
+ revoke_reason           | text                     |           |          | 
 Indexes:
     "product_licenses_pkey" PRIMARY KEY, btree (id)
     "product_licenses_license_check_token_idx" UNIQUE, btree (license_check_token)
