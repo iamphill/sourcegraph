@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
 
-import { mdiOpenInNew, mdiCheckCircle, mdiChevronUp, mdiChevronDown, mdiAlertOctagram } from '@mdi/js'
+import { mdiOpenInNew, mdiCheckCircle, mdiChevronUp, mdiChevronDown, mdiAlertOctagram, mdiContentCopy } from '@mdi/js'
 import classNames from 'classnames'
 import { parseISO } from 'date-fns'
 import formatDistance from 'date-fns/formatDistance'
@@ -33,6 +33,7 @@ import {
     H3,
     H4,
     Label,
+    CopyableText,
 } from '@sourcegraph/wildcard'
 
 import { LogOutput } from '../components/LogOutput'
@@ -209,7 +210,7 @@ const SiteUpgradeReadiness: FunctionComponent = () => {
                     <hr className="my-3" />
                     <div className="d-flex flex-row justify-content-between">
                         <H3>Schema drift</H3>
-                        <Button onClick={() => refetch()} variant="primary" size="sm">
+                        <Button onClick={() => refetch()} variant="primary" size="sm" aria-label="refresh drift check">
                             {' '}
                             Refresh{' '}
                         </Button>
@@ -241,55 +242,83 @@ const SiteUpgradeReadiness: FunctionComponent = () => {
                             </CollapseHeader>
 
                             <CollapsePanel>
-                                {data.site.upgradeReadiness.schemaDrift.map(summary => (
-                                    <div key={summary.name} className={styles.container}>
-                                        <div className={styles.tableContainer}>
-                                            <div className={styles.table}>
-                                                <div className={styles.label}>Problem:</div>
-                                                <div>{summary.problem}</div>
-                                            </div>
-                                            <div className={styles.table}>
-                                                <div className={styles.label}>Solution:</div>
-                                                <div>{capitalize(summary.solution)}</div>
-                                            </div>
-                                            <div className={styles.table}>
-                                                <div className={styles.label}>Hint:</div>
-                                                <div>
-                                                    {summary.urlHint ? (
-                                                        <Link to={summary.urlHint}>
-                                                            See Sourcegraph query for potential fix
-                                                        </Link>
-                                                    ) : (
-                                                        'Not Applicable'
-                                                    )}
+                                {data.site.upgradeReadiness.schemaDrift.map(summary => {
+                                    return (
+                                        <div key={summary.name} className={styles.container}>
+                                            <div className={styles.tableContainer}>
+                                                <div className={styles.table}>
+                                                    <div className={styles.label}>Problem:</div>
+                                                    <div>{summary.problem}</div>
+                                                </div>
+                                                <div className={styles.table}>
+                                                    <div className={styles.label}>Solution:</div>
+                                                    <div>{capitalize(summary.solution)}</div>
+                                                </div>
+                                                <div className={styles.table}>
+                                                    <div className={styles.label}>Hint:</div>
+                                                    <div>
+                                                        {summary.urlHint ? (
+                                                            <Link to={summary.urlHint}>
+                                                                See Sourcegraph query for potential fix
+                                                            </Link>
+                                                        ) : (
+                                                            'Not Applicable'
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className={styles.outputContainer}>
-                                            <div className={styles.infoContainer}>
-                                                <div className={styles.label}>Current Delta:</div>
-                                                <div>
-                                                    <LogOutput
-                                                        text={summary.diff ? summary.diff : 'None'}
-                                                        logDescription="The object diff"
-                                                    />
+                                            <div className={styles.outputContainer}>
+                                                <div className={styles.infoContainer}>
+                                                    <div className={styles.label}>Current Delta:</div>
+                                                    <div>
+                                                        <LogOutput
+                                                            text={summary.diff ? summary.diff : 'None'}
+                                                            logDescription="The object diff"
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div className={styles.infoContainer}>
-                                                <div className={styles.label}>Suggested statements to repair:</div>
-                                                <div>
-                                                    <LogOutput
-                                                        text={
-                                                            summary.statements ? summary.statements.join('\n') : 'None'
-                                                        }
-                                                        logDescription="SQL statements to repair"
-                                                    />
+                                                <div className={styles.infoContainer}>
+                                                    <div className="d-flex flex-row justify-content-between">
+                                                        <div className={styles.label}>
+                                                            Suggested statements to repair:
+                                                        </div>
+                                                        <Button
+                                                            onClick={() => {
+                                                                if (summary.statements) {
+                                                                    navigator.clipboard.writeText(
+                                                                        summary.statements.join('\n')
+                                                                    )
+                                                                } else {
+                                                                    // Handle null case
+                                                                    console.log(
+                                                                        'summary.statements was null or undefined'
+                                                                    )
+                                                                }
+                                                            }}
+                                                            variant="primary"
+                                                            size="sm"
+                                                            aria-label="copy sql statements to repair"
+                                                            className="mb-1"
+                                                        >
+                                                            <Icon aria-hidden={true} svgPath={mdiContentCopy} />
+                                                        </Button>
+                                                    </div>
+                                                    <div>
+                                                        <LogOutput
+                                                            text={
+                                                                summary.statements
+                                                                    ? summary.statements.join('\n')
+                                                                    : 'None'
+                                                            }
+                                                            logDescription="SQL statements to repair"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    )
+                                })}
                             </CollapsePanel>
                         </Collapse>
                     ) : (
