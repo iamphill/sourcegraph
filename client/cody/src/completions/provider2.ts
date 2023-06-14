@@ -1,3 +1,5 @@
+import { parseStringPromise } from 'xml2js'
+
 import { Message } from '@sourcegraph/cody-shared/src/sourcegraph-api'
 import { SourcegraphNodeCompletionsClient } from '@sourcegraph/cody-shared/src/sourcegraph-api/completions/nodeClient'
 
@@ -131,9 +133,15 @@ ${this.prefix}
         return [...referenceSnippetMessages, ...prefixMessages]
     }
 
-    private postProcess(completion: string): string {
-        // Parse XML
-        // MARK
+    private async postProcess(completion: string): Promise<string> {
+        const result = await parseStringPromise(completion)
+        if (!result.code || typeof result.code !== 'string') {
+            return ''
+        }
+        console.log('# result', result.code)
+        return 'TODO'
+        return result.code // MARK
+        
         
         // let suggestion = completion
         // const endBlockIndex = completion.indexOf('```')
@@ -176,8 +184,8 @@ ${this.prefix}
         )
 
         // Post-process
-        return responses.flatMap(resp => {
-            const content = this.postProcess(resp.completion)
+        const ret = await Promise.all(responses.map(async resp => {
+            const content = await this.postProcess(resp.completion)
 
             if (content === null) {
                 return []
@@ -191,6 +199,7 @@ ${this.prefix}
                     stopReason: resp.stopReason,
                 },
             ]
-        })
+        }))
+        return ret.flat()
     }
 }

@@ -14,11 +14,11 @@ import { History } from './history'
 import * as CompletionLogger from './logger'
 import { detectMultilineMode } from './multiline'
 import {
-    AbstractCompletionProvider,
     CompletionProvider,
     InlineCompletionProvider,
     ManualCompletionProvider,
 } from './provider'
+import { NewCompletionProvider } from './provider2'
 
 const LOG_MANUAL = { type: 'manual' }
 const WINDOW_SIZE = 50
@@ -216,6 +216,19 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
             document.languageId
         )
         console.log('# multilineMode', multilineMode)
+        completers.push(
+            new NewCompletionProvider(
+                this.completionsClient,
+                remainingChars,
+                this.responseTokens,
+                similarCode,
+                prefix,
+                suffix,
+                '',
+                document.languageId,
+                1,
+            )
+        )
         if (multilineMode) {
             timeout = 200
             completers.push(

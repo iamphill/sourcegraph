@@ -799,10 +799,12 @@
     "openai": "^3.2.1",
     "wink-eng-lite-web-model": "^1.5.0",
     "wink-nlp": "^1.13.1",
-    "wink-nlp-utils": "^2.1.0"
+    "wink-nlp-utils": "^2.1.0",
+    "xml2js": "^0.6.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.33.0",
+    "@types/xml2js": "^0.4.11",
     "playwright": "^1.33.0"
   }
 }
