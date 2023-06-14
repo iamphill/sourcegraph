@@ -295,7 +295,7 @@ const SiteUpgradeReadiness: FunctionComponent = () => {
                                                                     )
                                                                 }
                                                             }}
-                                                            variant="primary"
+                                                            variant="secondary"
                                                             size="sm"
                                                             aria-label="copy sql statements to repair"
                                                             className="mb-1"
