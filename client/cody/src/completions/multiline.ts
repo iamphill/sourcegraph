@@ -9,19 +9,20 @@ export function detectMultilineMode(
 ): null | 'block' {
     const config = getLanguageConfig(languageId)
 
-    if (
-        config &&
-        // Only trigger multiline suggestions for empty lines
-        sameLinePrefix.trim() === '' &&
-        sameLineSuffix.trim() === '' &&
-        // Only trigger multiline suggestions for the beginning of blocks
-        prefix.trim().at(prefix.trim().length - config.blockStart.length) === config.blockStart &&
-        // Only trigger multiline suggestions when the new current line is indented
-        indentation(prevNonEmptyLine) < indentation(sameLinePrefix)
-    ) {
-        return 'block'
-    }
-    return null
+    return 'block'
+    // if (
+    //     config &&
+    //     // Only trigger multiline suggestions for empty lines
+    //     sameLinePrefix.trim() === '' &&
+    //     sameLineSuffix.trim() === '' &&
+    //     // Only trigger multiline suggestions for the beginning of blocks
+    //     prefix.trim().at(prefix.trim().length - config.blockStart.length) === config.blockStart &&
+    //     // Only trigger multiline suggestions when the new current line is indented
+    //     indentation(prevNonEmptyLine) < indentation(sameLinePrefix)
+    // ) {
+    //     return 'block'
+    // }
+    // return null
 }
 
 export function truncateMultilineCompletion(

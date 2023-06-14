@@ -92,6 +92,9 @@ export const logger: CompletionLogger = {
             }
             hasFinished = true
 
+            // if (typeof result === 'object' && result.completion) {
+            //     console.log('# completion', result.completion)
+            // }
             debug(
                 'CompletionLogger:onComplete',
                 JSON.stringify({

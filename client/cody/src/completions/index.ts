@@ -13,7 +13,12 @@ import { CompletionsDocumentProvider } from './docprovider'
 import { History } from './history'
 import * as CompletionLogger from './logger'
 import { detectMultilineMode } from './multiline'
-import { CompletionProvider, InlineCompletionProvider, ManualCompletionProvider } from './provider'
+import {
+    AbstractCompletionProvider,
+    CompletionProvider,
+    InlineCompletionProvider,
+    ManualCompletionProvider,
+} from './provider'
 
 const LOG_MANUAL = { type: 'manual' }
 const WINDOW_SIZE = 50
@@ -92,17 +97,22 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
         context: vscode.InlineCompletionContext,
         token: vscode.CancellationToken
     ): Promise<vscode.InlineCompletionItem[]> {
-        this.abortOpenInlineCompletions()
+        console.log('# provideInlineCompletionItemsInner 0')
+        this.abortOpenInlineCompletions() // MARK
         const abortController = new AbortController()
         token.onCancellationRequested(() => abortController.abort())
         this.abortOpenInlineCompletions = () => abortController.abort()
 
         CompletionLogger.clear()
 
+        console.log('# provideInlineCompletionItemsInner 1')
+
         const currentEditor = vscode.window.activeTextEditor
         if (!currentEditor || currentEditor?.document.uri.scheme === 'cody') {
             return []
         }
+
+        console.log('# provideInlineCompletionItemsInner 2')
 
         const docContext = getCurrentDocContext(
             document,
@@ -113,6 +123,8 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
         if (!docContext) {
             return []
         }
+
+        console.log('# provideInlineCompletionItemsInner 3')
 
         const { prefix, suffix, prevLine: sameLinePrefix, prevNonEmptyLine } = docContext
         const sameLineSuffix = suffix.slice(0, suffix.indexOf('\n'))
@@ -161,6 +173,8 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
             contextChars
         )
 
+        console.log('# provideInlineCompletionItemsInner 4')
+
         const completers: CompletionProvider[] = []
         let timeout: number
         // VS Code does not show completions if we are in the process of writing a word or if a
@@ -170,6 +184,9 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
         if (context.selectedCompletionInfo || /[A-Za-z]$/.test(sameLinePrefix)) {
             return []
         }
+
+        console.log('# provideInlineCompletionItemsInner 5')
+
         // If we have a suffix in the same line as the cursor and the suffix contains any word
         // characters, do not attempt to make a completion. This means we only make completions if
         // we have a suffix in the same line for special characters like `)]}` etc.
@@ -179,11 +196,17 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
         if (/\w/.test(sameLineSuffix)) {
             return []
         }
+
+        console.log('# provideInlineCompletionItemsInner 6')
+
         // In this case, VS Code won't be showing suggestions anyway and we are more likely to want
         // suggested method names from the language server instead.
-        if (context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke || sameLinePrefix.endsWith('.')) {
+        if (sameLinePrefix.endsWith('.')) {
+            // if (context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke || sameLinePrefix.endsWith('.')) {
             return []
         }
+
+        console.log('# provideInlineCompletionItemsInner 7')
 
         const multilineMode = detectMultilineMode(
             prefix,
@@ -256,6 +279,8 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
             )
         }
 
+        console.log('# provideInlineCompletionItemsInner 8')
+
         if (!this.disableTimeouts) {
             await new Promise<void>(resolve => setTimeout(resolve, timeout))
         }
@@ -271,7 +296,11 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
         const unrankedResults = (
             await Promise.all(completers.map(c => c.generateCompletions(abortController.signal)))
         ).flat()
-        console.log('# unrankedResults', unrankedResults)
+        // console.log(
+        //     '# unrankedResults',
+        //     unrankedResults.map(r => r.content)
+        // )
+
         const results = rankCompletions(unrankedResults)
 
         const visibleResults = filterCompletions(results)

@@ -12,8 +12,11 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/redispool"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/schema"
+
+	logg "log"
 )
 
+// MARK
 // NewCodeCompletionsHandler is an http handler which sends back code completion results
 func NewCodeCompletionsHandler(logger log.Logger, db database.DB) http.Handler {
 	logger = logger.Scoped("code", "code completions handler")
@@ -37,6 +40,8 @@ func NewCodeCompletionsHandler(logger log.Logger, db database.DB) http.Handler {
 			_, _ = w.Write([]byte(err.Error()))
 			return
 		}
+
+		logg.Printf("# completion: %#v", completion)
 
 		completionBytes, err := json.Marshal(completion)
 		if err != nil {

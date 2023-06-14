@@ -14,6 +14,7 @@ import (
 )
 
 func Get(endpoint, provider, accessToken string) (types.CompletionsClient, error) {
+	// log.Printf("# completions/client.Get, provider: %s", provider)
 	switch provider {
 	case anthropic.ProviderName:
 		return anthropic.NewClient(httpcli.ExternalDoer, endpoint, accessToken), nil

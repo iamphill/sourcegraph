@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/completions/types"
@@ -40,6 +41,8 @@ func (a *anthropicClient) Complete(
 	feature types.CompletionsFeature,
 	requestParams types.CompletionRequestParameters,
 ) (*types.CompletionResponse, error) {
+	// log.Printf("# client/anthropic:anthropicClient.Complet %#v", requestParams)
+
 	resp, err := a.makeRequest(ctx, requestParams, false)
 	if err != nil {
 		return nil, err
@@ -112,6 +115,9 @@ func (a *anthropicClient) makeRequest(ctx context.Context, requestParams types.C
 	if len(requestParams.StopSequences) == 0 {
 		requestParams.StopSequences = []string{HUMAN_PROMPT}
 	}
+
+	fmt.Printf("#### StopSequences: %#v", requestParams.StopSequences)
+	fmt.Printf("#### prompt:\n%q\n%s\n#####\n", prompt, prompt)
 
 	payload := anthropicCompletionsRequestParameters{
 		Stream:            stream,

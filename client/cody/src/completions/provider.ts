@@ -19,7 +19,11 @@ DO NOT respond with anything other than code.`
 
 const BAD_COMPLETION_START = /^(\p{Emoji_Presentation}|\u{200B}|\+ |- |. )+(\s)+/u
 
-export abstract class CompletionProvider {
+export interface CompletionProvider {
+    generateCompletions(abortSignal: AbortSignal, n?: number): Promise<Completion[]>
+}
+
+export abstract class AbstractCompletionProvider implements CompletionProvider {
     constructor(
         protected completionsClient: SourcegraphNodeCompletionsClient,
         protected promptChars: number,
@@ -110,7 +114,7 @@ export abstract class CompletionProvider {
     public abstract generateCompletions(abortSignal: AbortSignal, n?: number): Promise<Completion[]>
 }
 
-export class ManualCompletionProvider extends CompletionProvider {
+export class ManualCompletionProvider extends AbstractCompletionProvider {
     protected createPromptPrefix(): Message[] {
         // TODO(beyang): escape 'Human:' and 'Assistant:'
         const prefix = this.prefix.trim()
@@ -212,7 +216,7 @@ export class ManualCompletionProvider extends CompletionProvider {
     }
 }
 
-export class InlineCompletionProvider extends CompletionProvider {
+export class InlineCompletionProvider extends AbstractCompletionProvider {
     constructor(
         completionsClient: SourcegraphNodeCompletionsClient,
         promptChars: number,
@@ -368,13 +372,22 @@ export class InlineCompletionProvider extends CompletionProvider {
             throw new Error('prompt length exceeded maximum alloted chars')
         }
 
+        // console.log(
+        //     '##### prompt\n',
+        //     prompt
+        //         .map(message =>
+        //             message.speaker === 'assistant' ? `\n\nAssistant: ${message.text}` : `\n\nHuman: ${message.text}`
+        //         )
+        //         .join('')
+        // )
+
         // Issue request
         const responses = await batchCompletions(
             this.completionsClient,
             {
                 messages: prompt,
-                stopSequences:
-                    this.multilineMode !== null ? [anthropic.HUMAN_PROMPT, '\n\n\n'] : [anthropic.HUMAN_PROMPT, '\n'],
+                // stopSequences:
+                //     this.multilineMode !== null ? [anthropic.HUMAN_PROMPT, '\n\n\n'] : [anthropic.HUMAN_PROMPT, '\n'],
                 maxTokensToSample: this.responseTokens,
                 temperature: 1,
                 topK: -1,
