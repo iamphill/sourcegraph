@@ -285,7 +285,7 @@
       {
         "command": "cody.delete-access-token",
         "category": "Cody",
-        "title": "Sign Out"
+        "title": "Sign Out..."
       },
       {
         "command": "cody.clear-chat-history",
@@ -305,7 +305,7 @@
       {
         "command": "cody.switch-account",
         "category": "Cody",
-        "title": "Switch Account",
+        "title": "Switch Account...",
         "group": "Cody",
         "icon": "$(account)"
       },
