@@ -1,5 +1,3 @@
-import * as anthropic from '@anthropic-ai/sdk'
-
 import { SourcegraphNodeCompletionsClient } from '@sourcegraph/cody-shared/src/sourcegraph-api/completions/nodeClient'
 import {
     CompletionParameters,
@@ -417,7 +415,7 @@ export class InlineCompletionProvider extends AbstractCompletionProvider {
     }
 }
 
-async function batchCompletions(
+export async function batchCompletions(
     client: SourcegraphNodeCompletionsClient,
     params: CompletionParameters,
     n: number,
