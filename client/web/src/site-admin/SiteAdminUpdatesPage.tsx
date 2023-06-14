@@ -36,7 +36,6 @@ import {
     CopyableText,
 } from '@sourcegraph/wildcard'
 
-import { LogOutput } from '../components/LogOutput'
 import { PageTitle } from '../components/PageTitle'
 
 import { SITE_UPDATE_CHECK, SITE_UPGRADE_READINESS, SET_AUTO_UPGRADE } from './backend'
