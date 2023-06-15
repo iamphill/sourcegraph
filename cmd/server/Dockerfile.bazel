@@ -72,9 +72,9 @@ RUN apk add --no-cache --verbose \
 # hadolint ignore=DL3022
 COPY --from=comby/comby:alpine-3.14-1.8.1@sha256:a5e80d6bad6af008478679809dc8327ebde7aeff7b23505b11b20e36aa62a0b2 /usr/local/bin/comby /usr/local/bin/comby
 # hadolint ignore=DL3022
-COPY --from=docker.io/sourcegraph/syntax-highlighter:223909_2023-06-02_5.0-6fd7735ab9c2 /syntax_highlighter /usr/local/bin/
+COPY --from=docker.io/sourcegraph/syntax-highlighter:223909_2023-06-02_5.0-6fd7735ab9c2@sha256:d629ca0631c79737a0fd5ac0062c1c6aea3bb2bbd410544e4faf4511a52b7d91 /syntax_highlighter /usr/local/bin/
 # hadolint ignore=DL3022
-COPY --from=docker.io/sourcegraph/symbols:223909_2023-06-02_5.0-6fd7735ab9c2 /usr/local/bin/scip-ctags /usr/local/bin/scip-ctags
+COPY --from=docker.io/sourcegraph/symbols:223909_2023-06-02_5.0-6fd7735ab9c2@sha256:e038860bf4323a1c7862ce99541ea24a798a54099ed1f7f8838214cc536a88eb /usr/local/bin/scip-ctags /usr/local/bin/scip-ctags
 
 
 # install blobstore (keep this up to date with the upstream Docker image
