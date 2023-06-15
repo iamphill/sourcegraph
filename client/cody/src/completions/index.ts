@@ -13,11 +13,7 @@ import { CompletionsDocumentProvider } from './docprovider'
 import { History } from './history'
 import * as CompletionLogger from './logger'
 import { detectMultilineMode } from './multiline'
-import {
-    CompletionProvider,
-    InlineCompletionProvider,
-    ManualCompletionProvider,
-} from './provider'
+import { CompletionProvider, InlineCompletionProvider, ManualCompletionProvider } from './provider'
 import { NewCompletionProvider } from './provider2'
 
 const LOG_MANUAL = { type: 'manual' }
@@ -226,71 +222,71 @@ export class CodyCompletionItemProvider implements vscode.InlineCompletionItemPr
                 suffix,
                 '',
                 document.languageId,
-                1,
+                1
             )
         )
-        if (multilineMode) {
-            timeout = 200
-            completers.push(
-                new InlineCompletionProvider(
-                    this.completionsClient,
-                    remainingChars,
-                    this.responseTokens,
-                    similarCode,
-                    prefix,
-                    suffix,
-                    '',
-                    document.languageId,
-                    3,
-                    multilineMode
-                )
-            )
-        } else if (sameLinePrefix.trim() === '') {
-            // The current line is empty
-            timeout = 20
-            completers.push(
-                new InlineCompletionProvider(
-                    this.completionsClient,
-                    remainingChars,
-                    this.responseTokens,
-                    similarCode,
-                    prefix,
-                    suffix,
-                    '',
-                    document.languageId,
-                    3 // tries
-                )
-            )
-        } else {
-            // The current line has a suffix
-            timeout = 200
-            completers.push(
-                new InlineCompletionProvider(
-                    this.completionsClient,
-                    remainingChars,
-                    this.responseTokens,
-                    similarCode,
-                    prefix,
-                    suffix,
-                    '',
-                    document.languageId,
-                    2 // tries
-                ),
-                // Create a completion request for the current prefix with a new line added. This
-                // will make for faster recommendations when the user presses enter.
-                new InlineCompletionProvider(
-                    this.completionsClient,
-                    remainingChars,
-                    this.responseTokens,
-                    similarCode,
-                    prefix,
-                    suffix,
-                    '\n', // force a new line in the case we are at end of line
-                    document.languageId,
-                    1 // tries
-                )
-            )
-        }
+        // if (multilineMode) {
+        //     timeout = 200
+        //     completers.push(
+        //         new InlineCompletionProvider(
+        //             this.completionsClient,
+        //             remainingChars,
+        //             this.responseTokens,
+        //             similarCode,
+        //             prefix,
+        //             suffix,
+        //             '',
+        //             document.languageId,
+        //             3,
+        //             multilineMode
+        //         )
+        //     )
+        // } else if (sameLinePrefix.trim() === '') {
+        //     // The current line is empty
+        //     timeout = 20
+        //     completers.push(
+        //         new InlineCompletionProvider(
+        //             this.completionsClient,
+        //             remainingChars,
+        //             this.responseTokens,
+        //             similarCode,
+        //             prefix,
+        //             suffix,
+        //             '',
+        //             document.languageId,
+        //             3 // tries
+        //         )
+        //     )
+        // } else {
+        //     // The current line has a suffix
+        //     timeout = 200
+        //     completers.push(
+        //         new InlineCompletionProvider(
+        //             this.completionsClient,
+        //             remainingChars,
+        //             this.responseTokens,
+        //             similarCode,
+        //             prefix,
+        //             suffix,
+        //             '',
+        //             document.languageId,
+        //             2 // tries
+        //         ),
+        //         // Create a completion request for the current prefix with a new line added. This
+        //         // will make for faster recommendations when the user presses enter.
+        //         new InlineCompletionProvider(
+        //             this.completionsClient,
+        //             remainingChars,
+        //             this.responseTokens,
+        //             similarCode,
+        //             prefix,
+        //             suffix,
+        //             '\n', // force a new line in the case we are at end of line
+        //             document.languageId,
+        //             1 // tries
+        //         )
+        //     )
+        // }
 
         console.log('# provideInlineCompletionItemsInner 8')
 

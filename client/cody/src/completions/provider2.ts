@@ -31,6 +31,9 @@ export class NewCompletionProvider implements CompletionProvider {
             throw new Error('no prefix lines')
         }
 
+        const tail = getTail(this.prefix, false)
+
+        // NEXT: update prompt to have assistant write the prefix
         const prefixMessages: Message[] = [
             {
                 speaker: 'human',
@@ -42,20 +45,20 @@ export class NewCompletionProvider implements CompletionProvider {
             },
             {
                 speaker: 'human',
-                text:
-                `Only respond with code completions in between tags like this:
-<code>
+                text: `Only respond with code completions in between tags like this:
+<CODE5711>
 // Code goes here
-</code>
+</CODE5711>
 All answers must be valid ${this.languageId} programs.
 Complete the following file:
-<code>
+<CODE5711>
 ${this.prefix}
-</code>`
+</CODE5711>`,
             },
             {
                 speaker: 'assistant',
-                text: '',
+                text: `<CODE5711>
+${tail}`,
             },
         ]
         return prefixMessages
@@ -133,29 +136,51 @@ ${this.prefix}
         return [...referenceSnippetMessages, ...prefixMessages]
     }
 
-    private async postProcess(completion: string): Promise<string> {
-        const result = await parseStringPromise(completion)
-        if (!result.code || typeof result.code !== 'string') {
-            return ''
+    private async postProcess(rawResponse: string): Promise<string> {
+        console.log('# rawResponse\n', rawResponse)
+
+        let completion = extractFromCodeBlock(rawResponse)
+        const completionStart = completion.trimStart()
+        const prefixEnd = getTail(this.prefix, true)
+        if (prefixEnd !== undefined) {
+            const gcp = greatestCommonPrefix(prefixEnd, completionStart)
+            if (gcp.trim().length > 0) {
+                console.log('trimmed duplicate line', gcp)
+                completion = completion.slice(completion.indexOf(gcp) + gcp.length)
+            }
         }
-        console.log('# result', result.code)
-        return 'TODO'
-        return result.code // MARK
-        
-        
-        // let suggestion = completion
-        // const endBlockIndex = completion.indexOf('```')
-        // if (endBlockIndex !== -1) {
-        //     suggestion = completion.slice(0, endBlockIndex)
+        // const firstNonEmptyCompletionLine = completion.split('\n').find(l => l.trim().length > 0)
+        // const lastNonEmptyPrefixLine = this.prefix.split('\n').findLast(l => l.trim().length > 0)
+        // if (firstNonEmptyCompletionLine !== undefined && lastNonEmptyPrefixLine !== undefined) {
+        //     const gcp = greatestCommonPrefix(firstNonEmptyCompletionLine, lastNonEmptyPrefixLine)
+        //     if (gcp.trim().length > 0) {
+        //         console.log('trimmed duplicate line', gcp)
+        //         completion = completion.slice(completion.indexOf(gcp) + gcp.length)
+        //     }
         // }
 
-        // // Remove trailing whitespace before newlines
-        // suggestion = suggestion
-        //     .split('\n')
-        //     .map(line => line.trimEnd())
-        //     .join('\n')
+        // const completionLines = completion.trim().split('\n')
+        // if (completionLines.length === 0) {
+        //     throw new Error('TODO')
+        // }
+        // if (completionLines.length === 1) {
+        //     throw new Error('TODO')
+        // }
 
-        // return sliceUntilFirstNLinesOfSuffixMatch(suggestion, this.suffix, 5)
+        // const nakedFirstLine = completionLines[0]
+        // const lastLine = this.prefix.trim().split('\n')[-1]
+
+        // // TODO: use this as a completion example
+        // // get greatest common prefix of lastLine and nakedFirstLine
+        // const trimmedFirstLine = nakedFirstLine.slice(i)
+        // if (trimmedFirstLine.trim().length === 0) {
+        //     completion = completionLines.slice(1).join('\n')
+        // } else {
+        //     completion = trimmedFirstLine + '\n' + completionLines.slice(1).join('\n')
+        // }
+        // completion = nakedFirstLine.slice(i) + completionLines.slice(1).join('\n')
+
+        return completion
     }
 
     public async generateCompletions(abortSignal: AbortSignal, n?: number): Promise<Completion[]> {
@@ -175,31 +200,84 @@ ${this.prefix}
                 // stopSequences:
                 //     this.multilineMode !== null ? [anthropic.HUMAN_PROMPT, '\n\n\n'] : [anthropic.HUMAN_PROMPT, '\n'],
                 maxTokensToSample: this.responseTokens,
-                temperature: 1,
-                topK: -1,
-                topP: -1,
+                temperature: 0.5, // TODO(beyang): revisit
+                // topK: -1,
+                // topP: 0.9,
             },
             n || this.defaultN,
             abortSignal
         )
 
         // Post-process
-        const ret = await Promise.all(responses.map(async resp => {
-            const content = await this.postProcess(resp.completion)
+        const ret = await Promise.all(
+            responses.map(async resp => {
+                const content = await this.postProcess(resp.completion)
 
-            if (content === null) {
-                return []
-            }
+                if (content === null) {
+                    return []
+                }
 
-            return [
-                {
-                    prefix,
-                    messages: prompt,
-                    content,
-                    stopReason: resp.stopReason,
-                },
-            ]
-        }))
+                return [
+                    {
+                        prefix,
+                        messages: prompt,
+                        content,
+                        stopReason: resp.stopReason,
+                    },
+                ]
+            })
+        )
         return ret.flat()
+    }
+}
+
+function extractFromCodeBlock(completion: string): string {
+    if (completion.indexOf('<CODE5711>') !== -1) {
+        console.error('TODO invalid 1: ', completion)
+        return ''
+    }
+    let end = completion.indexOf('\n</CODE5711>')
+    if (end === -1) {
+        end = completion.length
+    }
+    return completion.substring(0, end)
+}
+
+// function extractFromCodeBlock(completion: string): string {
+//     const start = completion.indexOf('<CODE5711>')
+//     if (start === -1) {
+//         console.error('TODO invalid 0: ', completion)
+//         return ''
+//     }
+//     if (completion.indexOf('<CODE5711>', start + 1) !== -1) {
+//         console.error('TODO invalid 1: ', completion)
+//         return ''
+//     }
+//     let end = completion.indexOf('</CODE5711>', start)
+//     if (end === -1) {
+//         end = completion.length
+//     }
+//     return completion.substring(start + '<CODE5711>'.length, end).trim()
+// }
+
+function greatestCommonPrefix(s1: string, s2: string): string {
+    let i = 0
+    while (i < s1.length && i < s2.length && s1[i] === s2[i]) {
+        i++
+    }
+    return s1.substring(0, i)
+}
+
+// get the suffix of the string that is the last non-empty line, onward
+function getTail(s: string, trimStart: boolean): string | undefined {
+    const lines = s.split('\n')
+    const idx = lines.findLastIndex(l => l.trim().length > 0)
+    if (idx === -1) {
+        return undefined
+    }
+    if (trimStart) {
+        return lines.slice(idx).join('\n').trimStart()
+    } else {
+        return lines.slice(idx).join('\n')
     }
 }
